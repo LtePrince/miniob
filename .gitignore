@@ -22,7 +22,6 @@ compile_commands.json
 ./vcs.xml
 ./workspace.xml
 ./modules.xml
-./miniob/db/sys
 GRTAGS
 GPATH
 GTAGS
