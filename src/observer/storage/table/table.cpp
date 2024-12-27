@@ -29,6 +29,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/index/index.h"
 #include "storage/record/record_manager.h"
 #include "storage/table/table.h"
+#include "storage/table/table_meta.h"
 #include "storage/trx/trx.h"
 
 Table::~Table()
@@ -38,10 +39,10 @@ Table::~Table()
     record_handler_ = nullptr;
   }
 
-  if (data_buffer_pool_ != nullptr) {
-    data_buffer_pool_->close_file();
-    data_buffer_pool_ = nullptr;
-  }
+  // if (data_buffer_pool_ != nullptr) {
+  //   data_buffer_pool_->close_file();
+  //   data_buffer_pool_ = nullptr;
+  // }
 
   for (vector<Index *>::iterator it = indexes_.begin(); it != indexes_.end(); ++it) {
     Index *index = *it;
@@ -124,6 +125,82 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
   }
 
   LOG_INFO("Successfully create table %s:%s", base_dir, name);
+  return rc;
+}
+
+// RC Table::drop(Db *db, const char *path)
+// {
+//   RC rc = RC::SUCCESS;
+
+//   //删除索引
+//   for (auto index : indexes_)
+//   {
+//     rc = index->drop(this);
+//     if (rc != RC::SUCCESS)
+//     {
+//       LOG_ERROR("Failed to drop index. index name = %s index field = %s", index->index_meta().name(), index->index_meta().field());
+//       return rc;
+//     }
+//     //index = nullptr;
+//   }
+
+//   //drop record_handler
+//   record_handler_->close();
+//   delete record_handler_;
+//   record_handler_ = nullptr;
+
+//   //删除data文件并释放磁盘资源
+//   std::string data_file = table_data_file(base_dir_.c_str(), table_meta_.name());
+//   BufferPoolManager &bpm = db->buffer_pool_manager();
+//   rc = bpm.remove_file(data_file.c_str());
+//   if (rc != RC::SUCCESS)
+//   {
+//     LOG_ERROR("Failed to remove disk buffer pool of data file. file name=%s", data_file.c_str());
+//     return rc;
+//   }
+
+//   //删除meta文件
+//   int remove_ret = remove(path);
+//   if (remove_ret == -1)
+//   {
+//     LOG_ERROR("Failed to remove mate file. file name=%s. error details: %s", path, strerror(errno));
+//   }
+
+//   return rc;
+// }
+RC Table::drop(Db *db, const char *path)
+{
+  RC rc = RC::SUCCESS;
+
+  // drop index
+  for (auto index : indexes_) {
+    rc = index->drop(this);
+    if (rc != RC::SUCCESS) {
+      LOG_ERROR("Failed to drop index. index name = %s index field = %s", index->index_meta().name(), index->index_meta().field());
+      return rc;
+    }
+  }
+
+  // destroy record handler
+  record_handler_->close();
+  delete record_handler_;
+  record_handler_ = nullptr;
+
+  // destroy buffer_pool and remove data file
+  BufferPoolManager &bpm       = db->buffer_pool_manager();
+  std::string        data_file = table_data_file(base_dir_.c_str(), table_meta_.name());
+  rc                           = bpm.remove_file(data_file.c_str());
+  if (rc != RC::SUCCESS) {
+    LOG_ERROR("Failed to remove disk buffer pool of data file. file name=%s", data_file.c_str());
+    return rc;
+  }
+
+  // destroy mata file
+  int remove_ret = remove(path);
+  if (remove_ret == -1) {
+    LOG_ERROR("Failed to remove mate file. file name=%s. error details: %s", path, strerror(errno));
+  }
+
   return rc;
 }
 

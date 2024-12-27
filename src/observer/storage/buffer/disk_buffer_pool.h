@@ -193,6 +193,11 @@ public:
   ~DiskBufferPool();
 
   /**
+   * 获取buffer_pool对应的文件名
+   */
+  std::string file_name() const;
+
+  /**
    * 根据文件名打开一个分页文件
    */
   RC open_file(const char *file_name);
@@ -327,6 +332,7 @@ public:
   RC init(unique_ptr<DoubleWriteBuffer> dblwr_buffer);
 
   RC create_file(const char *file_name);
+  RC remove_file(const char *file_name);
   RC open_file(LogHandler &log_handler, const char *file_name, DiskBufferPool *&bp);
   RC close_file(const char *file_name);
 

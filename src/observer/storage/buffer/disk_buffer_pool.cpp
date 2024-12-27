@@ -40,6 +40,10 @@ string BPFileHeader::to_string() const
 
 BPFrameManager::BPFrameManager(const char *name) : allocator_(name) {}
 
+std::string DiskBufferPool::file_name() const {
+  return file_name_;
+}
+
 RC BPFrameManager::init(int pool_num)
 {
   int ret = allocator_.init(false, pool_num);
@@ -832,6 +836,17 @@ RC BufferPoolManager::create_file(const char *file_name)
   close(fd);
   LOG_INFO("Successfully create %s.", file_name);
   return RC::SUCCESS;
+}
+
+RC BufferPoolManager::remove_file(const char *file_name)
+{
+  RC rc = close_file(file_name);
+  if (rc != RC::SUCCESS) {
+    return rc;
+  }
+
+  ::remove(file_name);
+  return rc;
 }
 
 RC BufferPoolManager::open_file(LogHandler &log_handler, const char *_file_name, DiskBufferPool *&_bp)

@@ -463,6 +463,11 @@ public:
       int internal_max_size = -1, int leaf_max_size = -1);
   RC create(LogHandler &log_handler, DiskBufferPool &buffer_pool, AttrType attr_type, int attr_length,
       int internal_max_size = -1, int leaf_max_size = -1);
+    
+  /**
+   * 删除indexHandler对应的索引文件
+   */
+  RC drop(BufferPoolManager &bpm);
 
   /**
    * @brief 打开一个B+树
