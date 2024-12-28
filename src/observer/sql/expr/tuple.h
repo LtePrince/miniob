@@ -204,9 +204,19 @@ public:
     return RC::SUCCESS;
   }
 
-  RC set_value_at(const FieldMeta *field_meta, Value *values_) const
+  RC set_value_at(std::string field, Value *values_, char *data = nullptr) const
   {
-    memcpy(this->record_->data() + field_meta->offset(), values_->data(), values_->length());
+    //memcpy(this->record_->data() + field_meta->offset(), values_->data(), values_->length());
+    const TableMeta table_meta = table_->table_meta();
+		const FieldMeta * field_meta = table_meta.field(field.c_str());
+    if (data == nullptr)
+    {
+      memcpy(this->record_->data() + field_meta->offset(), values_->data(), values_->length());
+    }
+    else
+    {
+      memcpy(data + field_meta->offset(), values_->data(), values_->length());
+    }
     return RC::SUCCESS;
   }
 

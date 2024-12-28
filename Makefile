@@ -14,6 +14,7 @@ rebuild:
 	@sudo rm -rf ./build_debug
 
 clean:
+	@rm -rf ./miniob
 	@rm -rf ./observer.log.*
 
 gen_parser:
