@@ -566,13 +566,13 @@ RC Table::update_index(const Record &record, std::string field_str)
     }
     
   }
-  for (auto index : indexNeedUpdate) {
-    rc = index->delete_entry(record.data(), &record.rid());
-    if (OB_FAIL(rc)) {
-      LOG_WARN("delete index entry failed: %s", strrc(rc));
-      return rc;
-    }
-  }
+  // for (auto index : indexNeedUpdate) {
+  //   rc = index->delete_entry(record.data(), &record.rid());
+  //   if (OB_FAIL(rc)) {
+  //     LOG_WARN("delete index entry failed: %s", strrc(rc));
+  //     return rc;
+  //   }
+  // }
   for (auto index : indexNeedUpdate) {
     rc = index->insert_entry(record.data(), &record.rid());
     if (OB_FAIL(rc)) {

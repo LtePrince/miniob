@@ -31,6 +31,8 @@ RC UpdatePhysicalOperator::open(Trx *trx)
     //Record   &record    = row_tuple->record();
 		//const TableMeta table_meta = table_->table_meta();
 		//const FieldMeta * field_meta = table_meta.field(field_.c_str());
+		Index* index = table_->find_index_by_field(field_.c_str());
+		if(index!=nullptr) return RC::INVALID_ARGUMENT;
 
 		table_->visit_record(row_tuple->record().rid(), [this, row_tuple, trx, &updateIndexTasks](Record &record) {
 			row_tuple->set_value_at(field_, values_, record.data());
