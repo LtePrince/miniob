@@ -204,6 +204,12 @@ public:
     return RC::SUCCESS;
   }
 
+  RC set_value_at(const FieldMeta *field_meta, Value *values_) const
+  {
+    memcpy(this->record_->data() + field_meta->offset(), values_->data(), values_->length());
+    return RC::SUCCESS;
+  }
+
   RC spec_at(int index, TupleCellSpec &spec) const override
   {
     const Field &field = speces_[index]->field();

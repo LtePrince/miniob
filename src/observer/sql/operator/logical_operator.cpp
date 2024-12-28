@@ -27,7 +27,7 @@ bool LogicalOperator::can_generate_vectorized_operator(const LogicalOperatorType
     case LogicalOperatorType::INSERT:
         bool_ret = false;
         break;
-    
+    case LogicalOperatorType::UPDATE://
     default:
         bool_ret = true;
         break;
