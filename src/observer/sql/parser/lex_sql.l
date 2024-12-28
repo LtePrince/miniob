@@ -79,7 +79,8 @@ QUOTE            [\'\"]
 
 [\-]?{DIGIT}+                           yylval->number=atoi(yytext); RETURN_TOKEN(NUMBER);
 [\-]?{DIGIT}+{DOT}{DIGIT}+              yylval->floats=(float)(atof(yytext)); RETURN_TOKEN(FLOAT);
-{QUOTE}[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}{QUOTE}          yylval->string=strdup(yytext); RETURN_TOKEN(DATE);
+\'[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}\'          yylval->string=strdup(yytext); RETURN_TOKEN(DATE);
+\"[0-9]{4}-[0-9]{1,2}-[0-9]{1,2}\"          yylval->string=strdup(yytext); RETURN_TOKEN(DATE);
 
 ";"                                     RETURN_TOKEN(SEMICOLON);
 {DOT}                                   RETURN_TOKEN(DOT);
