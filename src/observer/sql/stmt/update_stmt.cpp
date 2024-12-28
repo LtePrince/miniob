@@ -22,6 +22,17 @@ UpdateStmt::UpdateStmt(Table *table, std::string field_name, Value *values, Filt
     : table_(table), values_(values), field_name_(field_name), filter_stmt_(filter_stmt)
 {}
 
+UpdateStmt::~UpdateStmt()
+{
+  delete values_;
+  values_ = nullptr;
+  if(nullptr != filter_stmt_)
+  {
+    delete filter_stmt_;
+    filter_stmt_ = nullptr;
+  }
+}
+
 RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
 {
   // TODO

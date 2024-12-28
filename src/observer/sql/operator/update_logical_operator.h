@@ -23,6 +23,6 @@ public:
 
 private:
   Table             *table_ = nullptr;
-  Value             *values_;
+  Value             *values_ = nullptr;
   std::string field_name_;
 };

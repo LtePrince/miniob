@@ -27,9 +27,8 @@ class Table;
 class UpdateStmt : public Stmt
 {
 public:
-  UpdateStmt() = default;
   UpdateStmt(Table *table, std::string field_name, Value *values, FilterStmt *filter_stmt);
-
+  ~UpdateStmt();
   StmtType type() const override { return StmtType::UPDATE; }
 
 public:
