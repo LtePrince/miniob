@@ -29,6 +29,8 @@ public:
   UpdateStmt() = default;
   UpdateStmt(Table *table, Value *values, int value_amount);
 
+  StmtType type() const override { return StmtType::UPDATE; }
+
 public:
   static RC create(Db *db, const UpdateSqlNode &update_sql, Stmt *&stmt);
 

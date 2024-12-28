@@ -34,6 +34,7 @@ public:
   friend class FloatType;
   friend class BooleanType;
   friend class CharType;
+  friend class DateType;
   friend class VectorType;
 
   Value() = default;
@@ -46,6 +47,8 @@ public:
   explicit Value(float val);
   explicit Value(bool val);
   explicit Value(const char *s, int len = 0);
+  
+  static Value *from_date(const char* date);
 
   Value(const Value &other);
   Value(Value &&other);
@@ -90,6 +93,8 @@ public:
   void set_data(const char *data, int length) { this->set_data(const_cast<char *>(data), length); }
   void set_value(const Value &value);
   void set_boolean(bool val);
+  void set_date(const char* val);        // 从 YYYYMMDD 格式的整数创建 Value
+  void set_date(int val);
 
   string to_string() const;
 
@@ -99,6 +104,7 @@ public:
 
   int      length() const { return length_; }
   AttrType attr_type() const { return attr_type_; }
+  bool is_date_valid() const;
 
 public:
   /**
@@ -125,6 +131,7 @@ private:
     int32_t int_value_;
     float   float_value_;
     bool    bool_value_;
+    //int32_t dates_value_;
     char   *pointer_value_;
   } value_ = {.int_value_ = 0};
 

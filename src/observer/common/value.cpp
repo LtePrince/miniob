@@ -28,6 +28,13 @@ Value::Value(bool val) { set_boolean(val); }
 
 Value::Value(const char *s, int len /*= 0*/) { set_string(s, len); }
 
+Value* Value::from_date(const char* date)
+{
+  Value *val = new Value();
+  val->set_date(date);
+  return val;
+}
+
 Value::Value(const Value &other)
 {
   this->attr_type_ = other.attr_type_;
@@ -125,6 +132,10 @@ void Value::set_data(char *data, int length)
       value_.bool_value_ = *(int *)data != 0;
       length_            = length;
     } break;
+    case AttrType::DATES: {
+      value_.int_value_ = *(int *)data;
+      length_            = length;
+    } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
     } break;
@@ -152,6 +163,31 @@ void Value::set_boolean(bool val)
   attr_type_         = AttrType::BOOLEANS;
   value_.bool_value_ = val;
   length_            = sizeof(val);
+}
+void Value::set_date(const char* val)
+{
+  reset();
+  attr_type_         = AttrType::DATES;
+  string            dates;  // 存储分割好的日期字符串
+  std::stringstream s(val);
+  std::string       part;
+  while (std::getline(s, part, '-')) {
+    if (part.length() == 1) {
+      dates += "0" + part;
+    } else {
+      dates += part;
+    }
+  }
+  value_.int_value_ = atoi(dates.c_str());
+  length_            = sizeof(value_.int_value_);
+}
+
+void Value::set_date(int val)
+{
+  reset();
+  attr_type_        = AttrType::DATES;
+  value_.int_value_ = val;
+  length_           = sizeof(val);
 }
 
 void Value::set_string(const char *s, int len /*= 0*/)
@@ -189,6 +225,9 @@ void Value::set_value(const Value &value)
     } break;
     case AttrType::BOOLEANS: {
       set_boolean(value.get_boolean());
+    } break;
+    case AttrType::DATES: {
+      set_date(value.get_int());
     } break;
     default: {
       ASSERT(false, "got an invalid value type");
@@ -250,6 +289,9 @@ int Value::get_int() const
     }
     case AttrType::BOOLEANS: {
       return (int)(value_.bool_value_);
+    }
+    case AttrType::DATES: {
+      return (int)(value_.int_value_);
     }
     default: {
       LOG_WARN("unknown data type. type=%d", attr_type_);
@@ -326,4 +368,34 @@ bool Value::get_boolean() const
     }
   }
   return false;
+}
+
+bool Value::is_date_valid() const
+{
+  int date  = get_int();
+  int year  = date / 10000;
+  int month = (date % 10000) / 100;
+  int day   = date % 100;
+  if (year < 1900 || year > 2100) {
+    return false;
+  }
+  if (month < 1 || month > 12) {
+    return false;
+  }
+  if (day < 1 || day > 31) {
+    return false;
+  }
+  // 判断闰年
+  if (month == 2) {
+    bool is_leap_year = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    if (is_leap_year) {
+      return day <= 29;
+    } else {
+      return day <= 28;
+    }
+  }
+  if (month == 4 || month == 6 || month == 9 || month == 11) {
+    return day <= 30;
+  }
+  return true;
 }
