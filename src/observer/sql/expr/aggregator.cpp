@@ -90,6 +90,10 @@ RC MaxAggregator::evaluate(Value &result)
 }
 RC MinAggregator::accumulate(const Value &value)
 {
+  if (value_.attr_type() == AttrType::UNDEFINED) {
+    value_ = value;
+    return RC::SUCCESS;
+  }
   Value::min(value, value_, value_);
   return RC::SUCCESS;
 }

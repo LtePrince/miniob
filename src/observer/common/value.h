@@ -90,7 +90,7 @@ public:
 
   static RC min(const Value &left, const Value &right, Value &result)
   {
-    return DataType::type_instance(result.attr_type())->max(left, right, result);
+    return DataType::type_instance(result.attr_type())->min(left, right, result);
   }
 
   static RC cast_to(const Value &value, AttrType to_type, Value &result)
