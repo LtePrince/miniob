@@ -83,6 +83,16 @@ public:
     return DataType::type_instance(result.attr_type())->negative(value, result);
   }
 
+  static RC max(const Value &left, const Value &right, Value &result)
+  {
+    return DataType::type_instance(result.attr_type())->max(left, right, result);
+  }
+
+  static RC min(const Value &left, const Value &right, Value &result)
+  {
+    return DataType::type_instance(result.attr_type())->max(left, right, result);
+  }
+
   static RC cast_to(const Value &value, AttrType to_type, Value &result)
   {
     return DataType::type_instance(value.attr_type())->cast_to(value, to_type, result);
@@ -116,7 +126,7 @@ public:
   string get_string() const;
   bool   get_boolean() const;
 
-private:
+public:
   void set_int(int val);
   void set_float(float val);
   void set_string(const char *s, int len = 0);

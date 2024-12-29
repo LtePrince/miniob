@@ -89,7 +89,7 @@ RC ExpressionBinder::bind_expression(unique_ptr<Expression> &expr, vector<unique
     } break;
 
     case ExprType::AGGREGATION: {
-      ASSERT(false, "shouldn't be here");
+      return bind_aggregate_expression(expr, bound_expressions);
     } break;
 
     default: {
@@ -408,14 +408,10 @@ RC ExpressionBinder::bind_aggregate_expression(
     return RC::SUCCESS;
   }
 
+  RC rc = RC::SUCCESS;
+
   auto unbound_aggregate_expr = static_cast<UnboundAggregateExpr *>(expr.get());
-  const char *aggregate_name = unbound_aggregate_expr->aggregate_name();
-  AggregateExpr::Type aggregate_type;
-  RC rc = AggregateExpr::type_from_string(aggregate_name, aggregate_type);
-  if (OB_FAIL(rc)) {
-    LOG_WARN("invalid aggregate name: %s", aggregate_name);
-    return rc;
-  }
+  AggregateExpr::Type aggregate_type = unbound_aggregate_expr->aggregate_type();
 
   unique_ptr<Expression>        &child_expr = unbound_aggregate_expr->child();
   vector<unique_ptr<Expression>> child_bound_expressions;

@@ -405,26 +405,6 @@ private:
   std::unique_ptr<Expression> right_;
 };
 
-class UnboundAggregateExpr : public Expression
-{
-public:
-  UnboundAggregateExpr(const char *aggregate_name, Expression *child);
-  virtual ~UnboundAggregateExpr() = default;
-
-  ExprType type() const override { return ExprType::UNBOUND_AGGREGATION; }
-
-  const char *aggregate_name() const { return aggregate_name_.c_str(); }
-
-  std::unique_ptr<Expression> &child() { return child_; }
-
-  RC       get_value(const Tuple &tuple, Value &value) const override { return RC::INTERNAL; }
-  AttrType value_type() const override { return child_->value_type(); }
-
-private:
-  std::string                 aggregate_name_;
-  std::unique_ptr<Expression> child_;
-};
-
 class AggregateExpr : public Expression
 {
 public:
@@ -466,5 +446,25 @@ public:
 
 private:
   Type                        aggregate_type_;
+  std::unique_ptr<Expression> child_;
+};
+
+class UnboundAggregateExpr : public Expression
+{
+public:
+  UnboundAggregateExpr(AggregateExpr::Type aggregate_type, Expression *child);
+  virtual ~UnboundAggregateExpr() = default;
+
+  ExprType type() const override { return ExprType::UNBOUND_AGGREGATION; }
+
+  const AggregateExpr::Type aggregate_type() const { return aggregate_type_; }
+
+  std::unique_ptr<Expression> &child() { return child_; }
+
+  RC       get_value(const Tuple &tuple, Value &value) const override { return RC::INTERNAL; }
+  AttrType value_type() const override { return child_->value_type(); }
+
+private:
+  AggregateExpr::Type                 aggregate_type_;
   std::unique_ptr<Expression> child_;
 };

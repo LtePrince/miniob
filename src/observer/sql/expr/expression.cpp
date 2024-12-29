@@ -512,8 +512,8 @@ RC ArithmeticExpr::try_get_value(Value &value) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UnboundAggregateExpr::UnboundAggregateExpr(const char *aggregate_name, Expression *child)
-    : aggregate_name_(aggregate_name), child_(child)
+UnboundAggregateExpr::UnboundAggregateExpr(AggregateExpr::Type type, Expression *child)
+    : aggregate_type_(type), child_(child)
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -551,6 +551,22 @@ unique_ptr<Aggregator> AggregateExpr::create_aggregator() const
   switch (aggregate_type_) {
     case Type::SUM: {
       aggregator = make_unique<SumAggregator>();
+      break;
+    }
+    case Type::AVG: {
+      aggregator = make_unique<AvgAggregator>();
+      break;
+    }
+    case Type::MAX: {
+      aggregator = make_unique<MaxAggregator>();
+      break;
+    }
+    case Type::MIN: {
+      aggregator = make_unique<MinAggregator>();
+      break;
+    }
+    case Type::COUNT: {
+      aggregator = make_unique<CountAggregator>();
       break;
     }
     default: {
