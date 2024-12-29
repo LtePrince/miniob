@@ -80,7 +80,8 @@ RC MaxAggregator::accumulate(const Value &value)
     value_ = value;
     return RC::SUCCESS;
   }
-  Value::max(value, value_, value_);
+  Value tmp = value_;
+  Value::max(value, tmp, value_);
   return RC::SUCCESS;
 }
 RC MaxAggregator::evaluate(Value &result)
@@ -94,7 +95,8 @@ RC MinAggregator::accumulate(const Value &value)
     value_ = value;
     return RC::SUCCESS;
   }
-  Value::min(value, value_, value_);
+  Value tmp = value_;
+  Value::min(value, tmp, value_);
   return RC::SUCCESS;
 }
 RC MinAggregator::evaluate(Value &result)
