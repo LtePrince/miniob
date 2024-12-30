@@ -91,6 +91,7 @@ UnboundAggregateExpr *create_aggregate_expression(AggregateExpr::Type type,
         FLOAT_T
         DATE_T
         VECTOR_T
+        TEXT_T
         HELP
         EXIT
         DOT //QUOTE
@@ -370,6 +371,7 @@ type:
     | FLOAT_T  { $$ = static_cast<int>(AttrType::FLOATS); }
     | DATE_T   { $$ = static_cast<int>(AttrType::DATES); }
     | VECTOR_T { $$ = static_cast<int>(AttrType::VECTORS); }
+    | TEXT_T { $$ = static_cast<int>(AttrType::TEXT); }
     ;
 insert_stmt:        /*insert   语句的语法解析树*/
     INSERT INTO ID VALUES LBRACE value value_list RBRACE 

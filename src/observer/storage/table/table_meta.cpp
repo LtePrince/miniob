@@ -79,14 +79,26 @@ RC TableMeta::init(int32_t table_id, const char *name, const std::vector<FieldMe
   for (size_t i = 0; i < attributes.size(); i++) {
     const AttrInfoSqlNode &attr_info = attributes[i];
     // `i` is the col_id of fields[i]
-    rc = fields_[i + trx_field_num].init(
+    if(attr_info.type == AttrType::TEXT)
+    {
+      rc = fields_[i + trx_field_num].init(
+      attr_info.name.c_str(), attr_info.type, field_offset, (offsetof(TextData, len) + sizeof(TextData::len)), true /*visible*/, i);
+    }
+    else{
+      rc = fields_[i + trx_field_num].init(
       attr_info.name.c_str(), attr_info.type, field_offset, attr_info.length, true /*visible*/, i);
+    }
     if (OB_FAIL(rc)) {
       LOG_ERROR("Failed to init field meta. table name=%s, field name: %s", name, attr_info.name.c_str());
       return rc;
     }
-
-    field_offset += attr_info.length;
+    if(attr_info.type == AttrType::TEXT)
+    {
+      field_offset += (offsetof(TextData, len) + sizeof(TextData::len));
+    }
+    else{
+      field_offset += attr_info.length;
+    }
   }
 
   record_size_ = field_offset;

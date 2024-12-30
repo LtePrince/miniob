@@ -25,6 +25,10 @@ See the Mulan PSL v2 for more details. */
 #include "common/value.h"
 #include "storage/record/record.h"
 
+#include "storage/trx/mvcc_trx.h"
+#include "storage/common/meta_util.h"
+#include "storage/common/text_utils.h"
+
 class Table;
 
 /**
@@ -200,7 +204,15 @@ public:
     FieldExpr       *field_expr = speces_[index];
     const FieldMeta *field_meta = field_expr->field().meta();
     cell.set_type(field_meta->type());
-    cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    //cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    if (field_meta->type() == AttrType::TEXT) {
+      TextData text_data;
+      memcpy(&text_data, this->record_->data() + field_meta->offset(), field_meta->len());
+      TextUtils::load_text(table_, &text_data);
+      cell.set_text(text_data.str, text_data.len);
+    } else {
+      cell.set_data(this->record_->data() + field_meta->offset(), field_meta->len());
+    }
     return RC::SUCCESS;
   }
 
@@ -211,11 +223,33 @@ public:
 		const FieldMeta * field_meta = table_meta.field(field.c_str());
     if (data == nullptr)
     {
-      memcpy(this->record_->data() + field_meta->offset(), values_->data(), values_->length());
+      if(field_meta->type() == AttrType::TEXT)
+      {
+        values_->get_text();
+        TextData text_data = {
+            .len = static_cast<size_t>(values_->length()),
+            .str = reinterpret_cast<const TextData *>(values_->data())->str,
+        };
+        TextUtils::dump_text(table_, &text_data);
+        memcpy(this->record_->data() + field_meta->offset(), &text_data, offsetof(TextData, TextData::len) + sizeof(TextData::len));
+      }else{
+        memcpy(this->record_->data() + field_meta->offset(), values_->data(), values_->length());
+      }
     }
     else
     {
-      memcpy(data + field_meta->offset(), values_->data(), values_->length());
+      if (field_meta->type() == AttrType::TEXT)
+      {
+        values_->get_text();
+        TextData text_data = {
+            .len = static_cast<size_t>(values_->length()),
+            .str = reinterpret_cast<const TextData *>(values_->data())->str,
+        };
+        TextUtils::dump_text(table_, &text_data);
+        memcpy(data + field_meta->offset(), &text_data, offsetof(TextData, TextData::len) + sizeof(TextData::len));
+      }else{
+        memcpy(data + field_meta->offset(), values_->data(), values_->length());
+      }
     }
     return RC::SUCCESS;
   }

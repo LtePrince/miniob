@@ -57,10 +57,13 @@ RC UpdateStmt::create(Db *db, const UpdateSqlNode &update, Stmt *&stmt)
     return RC::SCHEMA_FIELD_NOT_EXIST;
   }
 
-  if (field_meta->type() != update.value.attr_type()) {
+  if(field_meta->type() != AttrType::TEXT && update.value.attr_type() != AttrType::CHARS)
+  {
+    if (field_meta->type() != update.value.attr_type()) {
     LOG_WARN("field type mismatch. table=%s, field=%s, field type=%d, value_type=%d",
           table_name, field_meta->name(), field_meta->type(), update.value.attr_type());
     return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+    }
   }
 
   if (field_meta->type() == AttrType::DATES && !update.value.is_date_valid())

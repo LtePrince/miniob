@@ -54,6 +54,13 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
       LOG_WARN("invalid date value: %s", values[i].to_string().c_str());
       return RC::SCHEMA_FIELD_TYPE_MISMATCH;
     }
+    // if(table_meta.field(i)->type() == AttrType::TEXT && values[i].attr_type() == AttrType::CHARS)
+    // {
+    //   Value *tmp_values = (Value*)values;
+    //   tmp_values[i].set_type(AttrType::TEXT);
+    //   tmp_values[i].get_text();
+    //   values = (const Value*)tmp_values;
+    // }
   }
 
   // everything alright

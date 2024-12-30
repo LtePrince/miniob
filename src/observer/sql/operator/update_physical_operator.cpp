@@ -34,7 +34,19 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
 		table_->visit_record(row_tuple->record().rid(), [this, row_tuple, trx, &updateIndexTasks](Record &record) {
 			record = row_tuple->record();
-			row_tuple->set_value_at(field_, values_, record.data());
+			const TableMeta table_meta = table_->table_meta();
+		  const FieldMeta * field_meta = table_meta.field(field_.c_str());
+			Value to_value;
+			Value tmp_value = *values_;
+			if (values_->attr_type() != field_meta->type()) {
+				RC rc = Value::cast_to(tmp_value, field_meta->type(), to_value);
+				if (OB_FAIL(rc)) {
+            LOG_WARN("cannot cast from %s to %s", attr_type_to_string(values_->attr_type()), attr_type_to_string(field_meta->type()));
+            return false;
+          }
+			}
+			Value* result_value = &to_value;
+			row_tuple->set_value_at(field_, result_value, record.data());
 			updateIndexTasks.push_back([this, record] {
 				return table_->update_index(record, field_);
     	});

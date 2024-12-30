@@ -35,6 +35,13 @@ Value* Value::from_date(const char* date)
   return val;
 }
 
+Value Value::TextValue(const char *s, int len)
+{
+  Value result;
+  result.set_text(s, len);
+  return result;
+}
+
 Value::Value(const Value &other)
 {
   this->attr_type_ = other.attr_type_;
@@ -44,7 +51,9 @@ Value::Value(const Value &other)
     case AttrType::CHARS: {
       set_string_from_other(other);
     } break;
-
+    case AttrType::TEXT: {
+      set_text_from_other(other);
+    } break;
     default: {
       this->value_ = other.value_;
     } break;
@@ -74,7 +83,9 @@ Value &Value::operator=(const Value &other)
     case AttrType::CHARS: {
       set_string_from_other(other);
     } break;
-
+    case AttrType::TEXT: {
+      set_text_from_other(other);
+    } break;
     default: {
       this->value_ = other.value_;
     } break;
@@ -106,6 +117,13 @@ void Value::reset()
         value_.pointer_value_ = nullptr;
       }
       break;
+    case AttrType::TEXT:
+      if (own_data_ && value_.pointer_value_ != nullptr) {
+        delete[] value_.pointer_value_;
+        value_.pointer_value_ = nullptr;
+        delete[] text_value_.str;
+      }
+      break;
     default: break;
   }
 
@@ -135,6 +153,9 @@ void Value::set_data(char *data, int length)
     case AttrType::DATES: {
       value_.int_value_ = *(int *)data;
       length_            = length;
+    } break;
+    case AttrType::TEXT: {
+      set_text(data, length);
     } break;
     default: {
       LOG_WARN("unknown data type: %d", attr_type_);
@@ -229,6 +250,9 @@ void Value::set_value(const Value &value)
     case AttrType::DATES: {
       set_date(value.get_int());
     } break;
+    case AttrType::TEXT: {
+      set_text(value.get_string().c_str(), value.length());
+    } break;
     default: {
       ASSERT(false, "got an invalid value type");
     } break;
@@ -245,11 +269,46 @@ void Value::set_string_from_other(const Value &other)
   }
 }
 
+void Value::set_text(const char *s, int len /*= 0*/)
+{
+  reset();
+  attr_type_ = AttrType::TEXT;
+  if (s == nullptr) {
+    value_.pointer_value_ = nullptr;
+    length_               = 0;
+  } else {
+    own_data_ = true;
+    if (len > 0) {
+      len = strnlen(s, len);
+    } else {
+      len = strlen(s);
+    }
+    value_.pointer_value_ = new char[len + 1];
+    length_               = len;
+    memcpy(value_.pointer_value_, s, len);
+    value_.pointer_value_[len] = '\0';
+    get_text();
+  }
+}
+
+void Value::set_text_from_other(const Value &other)
+{
+  ASSERT(attr_type_ == AttrType::TEXT, "attr type is not TEXT");
+  if (own_data_ && other.value_.pointer_value_ != nullptr && length_ != 0) {
+    this->value_.pointer_value_ = new char[this->length_ + 1];
+    memcpy(this->value_.pointer_value_, other.value_.pointer_value_, this->length_);
+    this->value_.pointer_value_[this->length_] = '\0';
+  }
+}
+
 const char *Value::data() const
 {
   switch (attr_type_) {
     case AttrType::CHARS: {
       return value_.pointer_value_;
+    } break;
+    case AttrType::TEXT: {
+      return reinterpret_cast<const char *>(&text_value_);
     } break;
     default: {
       return (const char *)&value_;
@@ -281,6 +340,14 @@ int Value::get_int() const
         return 0;
       }
     }
+    case AttrType::TEXT: {
+      try {
+        return (int)(std::stol(value_.pointer_value_));
+      } catch (exception const &ex) {
+        LOG_TRACE("failed to convert text to number. s=%s, ex=%s", value_.pointer_value_, ex.what());
+        return 0;
+      }
+    }
     case AttrType::INTS: {
       return value_.int_value_;
     }
@@ -309,6 +376,14 @@ float Value::get_float() const
         return std::stof(value_.pointer_value_);
       } catch (exception const &ex) {
         LOG_TRACE("failed to convert string to float. s=%s, ex=%s", value_.pointer_value_, ex.what());
+        return 0.0;
+      }
+    } break;
+    case AttrType::TEXT: {
+      try {
+        return std::stof(value_.pointer_value_);
+      } catch (exception const &ex) {
+        LOG_TRACE("failed to convert text to float. s=%s, ex=%s", value_.pointer_value_, ex.what());
         return 0.0;
       }
     } break;
@@ -352,6 +427,24 @@ bool Value::get_boolean() const
         return value_.pointer_value_ != nullptr;
       }
     } break;
+    case AttrType::TEXT: {
+      try {
+        float val = std::stof(value_.pointer_value_);
+        if (val >= EPSILON || val <= -EPSILON) {
+          return true;
+        }
+
+        int int_val = std::stol(value_.pointer_value_);
+        if (int_val != 0) {
+          return true;
+        }
+
+        return value_.pointer_value_ != nullptr;
+      } catch (exception const &ex) {
+        LOG_TRACE("failed to convert text to float or integer. s=%s, ex=%s", value_.pointer_value_, ex.what());
+        return value_.pointer_value_ != nullptr;
+      }
+    } break;
     case AttrType::INTS: {
       return value_.int_value_ != 0;
     } break;
@@ -368,6 +461,21 @@ bool Value::get_boolean() const
     }
   }
   return false;
+}
+
+void Value::get_text()
+{
+  if(attr_type_ == AttrType::TEXT || attr_type_ == AttrType::CHARS){
+      text_value_.offset = offset_;
+      text_value_.len = length_;
+      //text_value_.str = value_.pointer_value_;
+      text_value_.str = new char[length_+1];
+      memcpy(text_value_.str, value_.pointer_value_, length_);
+      text_value_.str[length_] = '\0';
+  }
+  else{
+      LOG_WARN("no text type. type=%d", attr_type_);
+  }
 }
 
 bool Value::is_date_valid() const

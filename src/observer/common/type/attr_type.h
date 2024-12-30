@@ -23,7 +23,16 @@ enum class AttrType
   VECTORS,   ///< 向量类型
   BOOLEANS,  ///< boolean类型，当前不是由parser解析出来的，是程序内部使用的
   DATES,     ///< 日期类型(四字节unsigned int)
+  TEXT,
   MAXTYPE,   ///< 请在 UNDEFINED 与 MAXTYPE 之间增加新类型
+};
+
+struct TextData
+{
+  size_t offset = 0;  // 数据在文件中的偏移
+  size_t len = 0;     // 文本的长度，不包括结尾零
+  // 以下内容不会保存在文件中
+  char *str = nullptr;  // text加载到内存后的地址
 };
 
 const char *attr_type_to_string(AttrType type);

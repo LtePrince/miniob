@@ -35,6 +35,7 @@ public:
   friend class BooleanType;
   friend class CharType;
   friend class DateType;
+  friend class TextType;
   friend class VectorType;
 
   Value() = default;
@@ -47,6 +48,8 @@ public:
   explicit Value(float val);
   explicit Value(bool val);
   explicit Value(const char *s, int len = 0);
+
+  static Value TextValue(const char *s, int len = 0);
   
   static Value *from_date(const char* date);
 
@@ -125,25 +128,28 @@ public:
   float  get_float() const;
   string get_string() const;
   bool   get_boolean() const;
-
 public:
   void set_int(int val);
   void set_float(float val);
   void set_string(const char *s, int len = 0);
   void set_string_from_other(const Value &other);
+  void set_text(const char *s, int len = 0);
+  void set_text_from_other(const Value &other);
+  void get_text();
 
 private:
   AttrType attr_type_ = AttrType::UNDEFINED;
   int      length_    = 0;
+  size_t   offset_;
 
   union Val
   {
     int32_t int_value_;
     float   float_value_;
     bool    bool_value_;
-    //int32_t dates_value_;
     char   *pointer_value_;
   } value_ = {.int_value_ = 0};
+  TextData  text_value_;
 
   /// 是否申请并占有内存, 目前对于 CHARS 类型 own_data_ 为true, 其余类型 own_data_ 为false
   bool own_data_ = false;

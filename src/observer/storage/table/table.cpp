@@ -14,6 +14,7 @@ See the Mulan PSL v2 for more details. */
 
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "common/defs.h"
 #include "common/lang/string.h"
@@ -25,6 +26,7 @@ See the Mulan PSL v2 for more details. */
 #include "storage/buffer/disk_buffer_pool.h"
 #include "storage/common/condition_filter.h"
 #include "storage/common/meta_util.h"
+#include "storage/common/text_utils.h"
 #include "storage/index/bplus_tree_index.h"
 #include "storage/index/index.h"
 #include "storage/record/record_manager.h"
@@ -105,6 +107,26 @@ RC Table::create(Db *db, int32_t table_id, const char *path, const char *name, c
   // 记录元数据到文件中
   table_meta_.serialize(fs);
   fs.close();
+
+  bool has_text = false;
+  for (const auto &attr : attributes) {
+    if (attr.type == AttrType::TEXT) {
+      has_text = true;
+      break;
+    }
+  }
+  if (has_text) {
+    std::string text_file = table_text_data_file(base_dir, name);
+    fd                    = ::open(text_file.c_str(), O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+    if (fd < 0) {
+      if (EEXIST == errno) {
+        LOG_ERROR("Failed to create text data file, it has been created. %s, EEXIST, %s", path, strerror(errno));
+        return RC::SCHEMA_TABLE_EXIST;
+      }
+      LOG_ERROR("Create text data file failed. filename=%s, errmsg=%d:%s", path, errno, strerror(errno));
+      return RC::IOERR_OPEN;
+    }
+  }
 
   db_       = db;
   base_dir_ = base_dir;
@@ -189,16 +211,36 @@ RC Table::drop(Db *db, const char *path)
   // destroy buffer_pool and remove data file
   BufferPoolManager &bpm       = db->buffer_pool_manager();
   std::string        data_file = table_data_file(base_dir_.c_str(), table_meta_.name());
+  std::string text_file_path = table_text_data_file(base_dir_.c_str(), table_meta_.name());
+
   rc                           = bpm.remove_file(data_file.c_str());
   if (rc != RC::SUCCESS) {
     LOG_ERROR("Failed to remove disk buffer pool of data file. file name=%s", data_file.c_str());
     return rc;
   }
 
-  // destroy mata file
+  //destroy mata file
   int remove_ret = remove(path);
   if (remove_ret == -1) {
     LOG_ERROR("Failed to remove mate file. file name=%s. error details: %s", path, strerror(errno));
+    return RC::INTERNAL;
+  }
+
+  // if (unlink(path) == -1) {
+  //   LOG_ERROR("Failed to remove table metadata file for %s due to %s", path, strerror(errno));
+  //   return RC::INTERNAL;
+  // }
+
+  // if (unlink(data_file.c_str()) == -1) {
+  //   LOG_ERROR("Failed to remove table data file for %s due to %s", path, strerror(errno));
+  //   return RC::INTERNAL;
+  // }
+
+  if (unlink(text_file_path.c_str()) == -1) {
+    if (errno != ENOENT) {
+      LOG_ERROR("Failed to remove text data file for %s due to %s", path, strerror(errno));
+      return RC::INTERNAL;
+    }
   }
 
   return rc;
@@ -382,7 +424,15 @@ RC Table::set_value_to_record(char *record_data, const Value &value, const Field
       copy_len = data_len + 1;
     }
   }
-  memcpy(record_data + field->offset(), value.data(), copy_len);
+  if (field->type() == AttrType::TEXT) {
+    const auto text_data         = reinterpret_cast<const TextData *>(value.data());
+    TextData   text_data_updated = *text_data;
+    TextUtils::dump_text(this, &text_data_updated);  // 不能原地修改value 中的TextData.offset
+    memcpy(record_data + field->offset(), &text_data_updated, copy_len);
+  } else {
+    memcpy(record_data + field->offset(), value.data(), copy_len);
+  }
+  //memcpy(record_data + field->offset(), value.data(), copy_len);
   return RC::SUCCESS;
 }
 
@@ -647,3 +697,5 @@ RC Table::sync()
   LOG_INFO("Sync table over. table=%s", name());
   return rc;
 }
+
+std::string Table::text_data_file() const { return table_text_data_file(base_dir_.c_str(), table_meta_.name()); }
