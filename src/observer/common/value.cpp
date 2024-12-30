@@ -122,6 +122,7 @@ void Value::reset()
         delete[] value_.pointer_value_;
         value_.pointer_value_ = nullptr;
         delete[] text_value_.str;
+        text_value_.str = nullptr;
       }
       break;
     default: break;
