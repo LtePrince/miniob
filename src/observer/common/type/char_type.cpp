@@ -54,6 +54,10 @@ RC CharType::cast_to(const Value &val, AttrType type, Value &result) const
 {
   switch (type) {
     case AttrType::TEXT: {
+      if (val.length() >= 65535) {
+        LOG_WARN("text field length %d is greater than max length 65535", val.length());
+        return RC::UNSUPPORTED;
+      }
       result.set_text(val.value_.pointer_value_, val.length());
       return RC::SUCCESS;
     }break;
