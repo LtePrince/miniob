@@ -29,8 +29,12 @@ RC UpdatePhysicalOperator::open(Trx *trx)
 
     RowTuple *row_tuple = static_cast<RowTuple *>(tuple);
     //Record   &record    = row_tuple->record();
-		//const TableMeta table_meta = table_->table_meta();
-		//const FieldMeta * field_meta = table_meta.field(field_.c_str());
+		const TableMeta table_meta = table_->table_meta();
+		const FieldMeta * field_meta = table_meta.field(field_.c_str());
+		if(field_meta->type() != values_->attr_type() && field_meta->type() != AttrType::TEXT)
+		{
+			return RC::INVALID_ARGUMENT;
+		}
 
 		table_->visit_record(row_tuple->record().rid(), [this, row_tuple, trx, &updateIndexTasks](Record &record) {
 			record = row_tuple->record();
