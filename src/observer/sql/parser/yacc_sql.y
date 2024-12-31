@@ -497,6 +497,7 @@ select_stmt:        /*  select 语句的语法解析树*/
 
       if ($7 != nullptr) {
         $$->selection.order_by.swap(*$7);
+        std::reverse($$->selection.order_by.begin(), $$->selection.order_by.end());
         delete $7;
       }
     }
