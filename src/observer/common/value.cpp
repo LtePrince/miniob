@@ -472,11 +472,17 @@ void Value::get_text()
 {
   if(attr_type_ == AttrType::TEXT || attr_type_ == AttrType::CHARS){
       text_value_.offset = offset_;
-      text_value_.len = length_;
+      if(length_ >= 4096)
+      {
+        text_value_.len = 4096;
+      }
+      else{
+        text_value_.len = length_;
+      }
       //text_value_.str = value_.pointer_value_;
-      text_value_.str = new char[length_+1];
-      memcpy(text_value_.str, value_.pointer_value_, length_);
-      text_value_.str[length_] = '\0';
+      text_value_.str = new char[text_value_.len+1];
+      memcpy(text_value_.str, value_.pointer_value_, text_value_.len);
+      text_value_.str[text_value_.len] = '\0';
   }
   else{
       LOG_WARN("no text type. type=%d", attr_type_);
