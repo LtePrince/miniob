@@ -482,7 +482,6 @@ select_stmt:        /*  select 语句的语法解析树*/
 
       if ($4 != nullptr) {
         $$->selection.relations.swap(*$4);
-        std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
         delete $4;
       }
 
@@ -498,7 +497,6 @@ select_stmt:        /*  select 语句的语法解析树*/
 
       if ($7 != nullptr) {
         $$->selection.order_by.swap(*$7);
-        std::reverse($$->selection.order_by.begin(), $$->selection.order_by.end());
         delete $7;
       }
     }
