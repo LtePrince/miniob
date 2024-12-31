@@ -10,6 +10,7 @@ OrderByPhysicalOperator::OrderByPhysicalOperator(vector<unique_ptr<Expression>> 
 }
 RC OrderByPhysicalOperator::open(Trx *trx)
 {
+  tuple_idx_ = 0;
   if (children_.empty()) {
     return RC::SUCCESS;
   }
@@ -45,6 +46,12 @@ RC OrderByPhysicalOperator::next()
 }
 RC OrderByPhysicalOperator::close()
 {
+  if (children_.empty()) {
+    return RC::SUCCESS;
+  }
+  children_[0]->close();
+  tuples_.clear();
+  tuple_idx_ = 0;
   return RC::SUCCESS;
 }
 Tuple *OrderByPhysicalOperator::current_tuple()
