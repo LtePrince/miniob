@@ -136,6 +136,7 @@ public:
   void set_text(const char *s, int len = 0);
   void set_text_from_other(const Value &other);
   void get_text();
+  void transform_str();
 
 private:
   AttrType attr_type_ = AttrType::UNDEFINED;

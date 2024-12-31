@@ -11,7 +11,8 @@ See the Mulan PSL v2 for more details. */
 //
 // Created by WangYunlai on 2023/06/28.
 //
-
+#include <ctype.h>
+#include <algorithm>
 #include "common/value.h"
 
 #include "common/lang/comparator.h"
@@ -477,6 +478,14 @@ void Value::get_text()
   else{
       LOG_WARN("no text type. type=%d", attr_type_);
   }
+}
+
+void Value::transform_str()
+{
+  std::string str = text_value_.str;
+  transform(str.begin(),str.end(),str.begin(),::toupper);
+  memcpy(text_value_.str, str.c_str(), length_);
+  text_value_.str[length_] = '\0';
 }
 
 bool Value::is_date_valid() const
