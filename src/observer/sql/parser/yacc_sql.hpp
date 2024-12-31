@@ -98,23 +98,25 @@ extern int yydebug;
     EXPLAIN = 299,                 /* EXPLAIN  */
     STORAGE = 300,                 /* STORAGE  */
     FORMAT = 301,                  /* FORMAT  */
-    EQ = 302,                      /* EQ  */
-    LT = 303,                      /* LT  */
-    GT = 304,                      /* GT  */
-    LE = 305,                      /* LE  */
-    GE = 306,                      /* GE  */
-    NE = 307,                      /* NE  */
-    COUNT = 308,                   /* COUNT  */
-    MAX = 309,                     /* MAX  */
-    MIN = 310,                     /* MIN  */
-    AVG = 311,                     /* AVG  */
-    SUM = 312,                     /* SUM  */
-    NUMBER = 313,                  /* NUMBER  */
-    FLOAT = 314,                   /* FLOAT  */
-    ID = 315,                      /* ID  */
-    SSS = 316,                     /* SSS  */
-    DATE = 317,                    /* DATE  */
-    UMINUS = 318                   /* UMINUS  */
+    ORDER = 302,                   /* ORDER  */
+    ASC = 303,                     /* ASC  */
+    EQ = 304,                      /* EQ  */
+    LT = 305,                      /* LT  */
+    GT = 306,                      /* GT  */
+    LE = 307,                      /* LE  */
+    GE = 308,                      /* GE  */
+    NE = 309,                      /* NE  */
+    COUNT = 310,                   /* COUNT  */
+    MAX = 311,                     /* MAX  */
+    MIN = 312,                     /* MIN  */
+    AVG = 313,                     /* AVG  */
+    SUM = 314,                     /* SUM  */
+    NUMBER = 315,                  /* NUMBER  */
+    FLOAT = 316,                   /* FLOAT  */
+    ID = 317,                      /* ID  */
+    SSS = 318,                     /* SSS  */
+    DATE = 319,                    /* DATE  */
+    UMINUS = 320                   /* UMINUS  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -123,13 +125,15 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 124 "yacc_sql.y"
+#line 126 "yacc_sql.y"
 
   ParsedSqlNode *                            sql_node;
   ConditionSqlNode *                         condition;
   Value *                                    value;
   enum CompOp                                comp;
   RelAttrSqlNode *                           rel_attr;
+  OrderBySqlNode *                           order_by_node;
+  std::vector<OrderBySqlNode> *              order_by_list;
   std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
   Expression *                               expression;
@@ -142,7 +146,7 @@ union YYSTYPE
   int                                        number;
   float                                      floats;
 
-#line 146 "yacc_sql.hpp"
+#line 150 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

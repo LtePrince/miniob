@@ -111,6 +111,11 @@ Value &Value::operator=(Value &&other)
 
 void Value::reset()
 {
+  if(text_value_.str != nullptr)
+  {
+    delete[] text_value_.str;
+    text_value_.str = nullptr;
+  }
   switch (attr_type_) {
     case AttrType::CHARS:
       if (own_data_ && value_.pointer_value_ != nullptr) {
@@ -122,8 +127,6 @@ void Value::reset()
       if (own_data_ && value_.pointer_value_ != nullptr) {
         delete[] value_.pointer_value_;
         value_.pointer_value_ = nullptr;
-        delete[] text_value_.str;
-        text_value_.str = nullptr;
       }
       break;
     default: break;

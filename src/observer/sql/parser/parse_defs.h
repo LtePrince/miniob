@@ -85,6 +85,11 @@ struct ConditionSqlNode
  * where 条件 conditions，这里表示使用AND串联起来多个条件。正常的SQL语句会有OR，NOT等，
  * 甚至可以包含复杂的表达式。
  */
+struct OrderBySqlNode
+{
+  std::unique_ptr<Expression> expression;  ///< 排序的字段
+  bool                        is_desc;     ///< 是否是降序
+};
 
 struct SelectSqlNode
 {
@@ -92,6 +97,7 @@ struct SelectSqlNode
   std::vector<std::string>                 relations;    ///< 查询的表
   std::vector<ConditionSqlNode>            conditions;   ///< 查询条件，使用AND串联起来多个条件
   std::vector<std::unique_ptr<Expression>> group_by;     ///< group by clause
+  std::vector<OrderBySqlNode>              order_by;     ///< order by clause
 };
 
 /**

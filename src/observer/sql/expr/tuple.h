@@ -226,7 +226,7 @@ public:
       if(field_meta->type() == AttrType::TEXT)
       {
         values_->get_text();
-        values_->transform_str();
+        //values_->transform_str();
         TextData text_data = {
             .len = static_cast<size_t>(values_->length()),
             .str = reinterpret_cast<const TextData *>(values_->data())->str,
@@ -242,7 +242,7 @@ public:
       if (field_meta->type() == AttrType::TEXT)
       {
         values_->get_text();
-        values_->transform_str();
+        //values_->transform_str();
         TextData text_data = {
             .len = static_cast<size_t>(values_->length()),
             .str = reinterpret_cast<const TextData *>(values_->data())->str,

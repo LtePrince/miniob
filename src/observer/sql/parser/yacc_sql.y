@@ -108,6 +108,8 @@ UnboundAggregateExpr *create_aggregate_expression(AggregateExpr::Type type,
         EXPLAIN
         STORAGE
         FORMAT
+        ORDER
+        ASC
         EQ
         LT
         GT
@@ -127,6 +129,8 @@ UnboundAggregateExpr *create_aggregate_expression(AggregateExpr::Type type,
   Value *                                    value;
   enum CompOp                                comp;
   RelAttrSqlNode *                           rel_attr;
+  OrderBySqlNode *                           order_by_node;
+  std::vector<OrderBySqlNode> *              order_by_list;
   std::vector<AttrInfoSqlNode> *             attr_infos;
   AttrInfoSqlNode *                          attr_info;
   Expression *                               expression;
@@ -165,6 +169,9 @@ UnboundAggregateExpr *create_aggregate_expression(AggregateExpr::Type type,
 %type <expression>          expression
 %type <expression_list>     expression_list
 %type <expression_list>     group_by
+%type <order_by_list>       order_by_list
+%type <order_by_list>       order_by
+%type <order_by_node>       order_by_item
 %type <sql_node>            calc_stmt
 %type <sql_node>            select_stmt
 %type <sql_node>            insert_stmt
@@ -465,7 +472,7 @@ update_stmt:      /*  update 语句的语法解析树*/
     }
     ;
 select_stmt:        /*  select 语句的语法解析树*/
-    SELECT expression_list FROM rel_list where group_by
+    SELECT expression_list FROM rel_list where group_by order_by
     {
       $$ = new ParsedSqlNode(SCF_SELECT);
       if ($2 != nullptr) {
@@ -475,6 +482,7 @@ select_stmt:        /*  select 语句的语法解析树*/
 
       if ($4 != nullptr) {
         $$->selection.relations.swap(*$4);
+        std::reverse($$->selection.relations.begin(), $$->selection.relations.end());
         delete $4;
       }
 
@@ -486,6 +494,12 @@ select_stmt:        /*  select 语句的语法解析树*/
       if ($6 != nullptr) {
         $$->selection.group_by.swap(*$6);
         delete $6;
+      }
+
+      if ($7 != nullptr) {
+        $$->selection.order_by.swap(*$7);
+        std::reverse($$->selection.order_by.begin(), $$->selection.order_by.end());
+        delete $7;
       }
     }
     ;
@@ -701,6 +715,56 @@ group_by:
       $$ = nullptr;
     }
     ;
+    
+order_by:
+    /* empty */
+    {
+      $$ = nullptr;
+    }
+    | ORDER BY order_by_list
+    {
+      $$ = new std::vector<OrderBySqlNode>;
+      $$->swap(*$3);
+      delete $3;
+    }
+    ;
+
+order_by_list:
+    order_by_item
+    {
+      $$ = new std::vector<OrderBySqlNode>;
+      $$->push_back(std::move(*$1));
+      delete $1;
+    }
+    | order_by_item COMMA order_by_list
+    {
+      $$ = $3;
+      $$->push_back(std::move(*$1));
+      delete $1;
+    }
+    ;
+
+order_by_item:
+    expression
+    {
+      $$ = new OrderBySqlNode;
+      $$->expression = std::unique_ptr<Expression>($1);
+      $$->is_desc = false;
+    }
+    | expression ASC
+    {
+      $$ = new OrderBySqlNode;
+      $$->expression = std::unique_ptr<Expression>($1);
+      $$->is_desc = false;
+    }
+    | expression DESC
+    {
+      $$ = new OrderBySqlNode;
+      $$->expression = std::unique_ptr<Expression>($1);
+      $$->is_desc = true;
+    }
+    ;
+    
 load_data_stmt:
     LOAD DATA INFILE SSS INTO TABLE ID 
     {
