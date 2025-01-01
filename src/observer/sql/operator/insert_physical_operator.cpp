@@ -40,13 +40,15 @@ RC InsertPhysicalOperator::open(Trx *trx)
     }
 
     rc = trx->insert_record(table_, record);
-    records.emplace_back(&record);
+    
     if (rc != RC::SUCCESS) {
       LOG_WARN("failed to insert record by transaction. rc=%s", strrc(rc));
-      for(Record* tmp: records){
-        trx->delete_record(table_,*tmp);
+      for(Record *tmp: records){
+        trx->delete_record(table_, *tmp);
       }
+      return rc;
     }
+    records.emplace_back(new Record(record));
   }
   return rc;
 }
