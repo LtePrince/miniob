@@ -474,6 +474,7 @@ void Value::get_text()
       text_value_.offset = offset_;
       if(length_ >= 4096)
       {
+        length_ = 4096;
         text_value_.len = 4096;
       }
       else{
