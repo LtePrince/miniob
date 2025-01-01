@@ -50,9 +50,10 @@ RC InsertStmt::create(Db *db, const InsertSqlNode &inserts, Stmt *&stmt)
     //如果是日期类型，检查日期是否合法
     for (int i = table_meta.sys_field_num(); i < table_meta.field_num(); i++)
     {
-      if(values[i].attr_type() != table_meta.field(i + table_meta.sys_field_num())->type())
+      if(values[i].attr_type() != table_meta.field(i)->type())
       {
-        return RC::SCHEMA_FIELD_TYPE_MISMATCH;
+        if(table_meta.field(i)->type() != AttrType::TEXT || values[i].attr_type() != AttrType::CHARS)
+          return RC::SCHEMA_FIELD_TYPE_MISMATCH;
       }
       if (values[i].attr_type() == AttrType::DATES && !values[i].is_date_valid()) {
         LOG_WARN("invalid date value: %s", values[i].to_string().c_str());
