@@ -145,8 +145,12 @@ union YYSTYPE
   char *                                     string;
   int                                        number;
   float                                      floats;
+  SelectSqlNode*                         select_expr_node;
+  std::vector<SelectSqlNode> *           s_expr_node_list;
+  RawTuple *                                 raw_tuple;
+  std::vector<RawTuple> *                    raw_tuple_list;
 
-#line 150 "yacc_sql.hpp"
+#line 154 "yacc_sql.hpp"
 
 };
 typedef union YYSTYPE YYSTYPE;

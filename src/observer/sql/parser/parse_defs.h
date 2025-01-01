@@ -109,6 +109,7 @@ struct CalcSqlNode
   std::vector<std::unique_ptr<Expression>> expressions;  ///< calc clause
 };
 
+typedef std::vector<Value> RawTuple;
 /**
  * @brief 描述一个insert语句
  * @ingroup SQLParser
@@ -118,6 +119,7 @@ struct InsertSqlNode
 {
   std::string        relation_name;  ///< Relation to insert into
   std::vector<Value> values;         ///< 要插入的值
+  std::vector<RawTuple> tuples; ///< 要插入的值列表
 };
 
 /**

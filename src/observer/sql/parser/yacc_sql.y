@@ -142,6 +142,10 @@ UnboundAggregateExpr *create_aggregate_expression(AggregateExpr::Type type,
   char *                                     string;
   int                                        number;
   float                                      floats;
+  SelectSqlNode*                         select_expr_node;
+  std::vector<SelectSqlNode> *           s_expr_node_list;
+  RawTuple *                                 raw_tuple;
+  std::vector<RawTuple> *                    raw_tuple_list;
 }
 
 %token <number> NUMBER
@@ -195,6 +199,8 @@ UnboundAggregateExpr *create_aggregate_expression(AggregateExpr::Type type,
 %type <sql_node>            command_wrapper
 // commands should be a list but I use a single command instead
 %type <sql_node>            commands
+%type <raw_tuple>           raw_tuple
+%type <raw_tuple_list>      raw_tuple_list
 
 %left '+' '-'
 %left '*' '/'
@@ -381,21 +387,46 @@ type:
     | TEXT_T { $$ = static_cast<int>(AttrType::TEXT); }
     ;
 insert_stmt:        /*insert   语句的语法解析树*/
-    INSERT INTO ID VALUES LBRACE value value_list RBRACE 
+    INSERT INTO ID VALUES raw_tuple raw_tuple_list 
     {
       $$ = new ParsedSqlNode(SCF_INSERT);
       $$->insertion.relation_name = $3;
-      if ($7 != nullptr) {
-        $$->insertion.values.swap(*$7);
-        delete $7;
+      if ($6 != nullptr) {
+        $$->insertion.tuples.swap(*$6);
+        delete $6;
       }
-      $$->insertion.values.emplace_back(*$6);
-      std::reverse($$->insertion.values.begin(), $$->insertion.values.end());
-      delete $6;
+      $$->insertion.tuples.emplace_back(*$5);
+      std::reverse($$->insertion.tuples.begin(), $$->insertion.tuples.end());
+      delete $5;
       free($3);
     }
     ;
-
+raw_tuple_list:
+    /* empty */
+    {
+      $$ = nullptr;
+    }
+    | COMMA raw_tuple raw_tuple_list  { 
+      if ($3 != nullptr) {
+        $$ = $3;
+      } else {
+        $$ = new std::vector<RawTuple>;
+      }
+      $$->emplace_back(*$2);
+      delete $2;
+    }
+    ;
+raw_tuple:
+    LBRACE value value_list RBRACE {
+      if ($3 != nullptr) {
+        $$ = $3;
+      } else {
+        $$ = new RawTuple;
+      }
+      $$->emplace_back(*$2);
+      std::reverse($$->begin(), $$->end());
+      delete $2;
+    }
 value_list:
     /* empty */
     {
