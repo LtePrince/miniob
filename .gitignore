@@ -12,6 +12,7 @@ build/*
 build_*
 cmake-build-*/*
 build
+/miniob/
 .cache/*
 .DS_Store
 .idea
